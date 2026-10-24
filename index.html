@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='theme-color' content='#101412'>
+<title>Meridian</title>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap'>
+<style>
+:root{--bg:#101412;--ink:#e8f0ea;--muted:#93a59a;--faint:#6d7f75;--line:#2a3832;--ocean:#0c1210;--panel:#141a17;--gold:#e7c56a;--gold-ink:#1c1406}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink)}body{font-family:'Instrument Sans','Avenir Next','Segoe UI',sans-serif;font-size:15px}button,input{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.app{height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);grid-template-rows:auto minmax(0,1fr)}
+header{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;padding:14px 18px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+h1{margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-style:italic;font-size:32px;letter-spacing:-.03em;line-height:.9}
+.brand small{display:block;margin-top:5px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.rule{width:28px;height:1px;background:var(--gold);margin-top:8px}
+.switcher{display:flex;gap:6px;flex:1 1 320px;overflow-x:auto;scrollbar-width:none}.switcher::-webkit-scrollbar{display:none}
+.switcher button{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:#d5e0d8;border-radius:999px;padding:8px 12px;white-space:nowrap}
+.switcher button[aria-pressed='true']{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
+.stage{position:relative;min-width:0;min-height:0;background:var(--ocean)}
+svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;background:var(--ocean);cursor:grab}svg:active{cursor:grabbing}
+.sphere{fill:#121a17}.grat{fill:none;stroke:#1d2a26;pointer-events:none}
+.country{cursor:pointer;stroke:#0c1210;stroke-linejoin:round;transition:fill 520ms ease}
+.highlight{fill:none;stroke:#f2d48a;stroke-linejoin:round;pointer-events:none}
+.legend{position:absolute;left:14px;bottom:14px;width:228px;padding:10px 12px 11px;background:rgba(16,20,18,.92);border:1px solid var(--line);border-radius:12px;pointer-events:none}
+.legend-top,.ticks{display:flex;justify-content:space-between;gap:8px}.legend-top{font-size:12px;margin-bottom:8px}.legend-top span:last-child,.ticks{color:var(--faint);font-size:11px;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:linear-gradient(90deg,#243830,#3f6d56,#8fbf73,#f0d56a,#ff9a3c)}.ticks{margin-top:5px}
+.nodata{display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--faint);font-size:11px}.nodata i{width:10px;height:10px;border-radius:2px;background:#1a2420;box-shadow:inset 0 0 0 1px #31423b}
+.zoom{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(16,20,18,.92);color:var(--ink);font-size:14px}
+#zfit{font-size:11px;letter-spacing:.04em}.zoom button:hover{border-color:#4d6158}
+.tip{position:absolute;z-index:3;min-width:148px;padding:8px 10px 9px;background:#1a221e;border:1px solid #3c4d45;border-radius:10px;pointer-events:none;opacity:0;transition:opacity 120ms ease;box-shadow:0 12px 28px rgba(0,0,0,.35)}.tip.show{opacity:1}
+.tip b{display:block;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:17px}.tip em{font-style:normal;color:var(--gold);font-variant-numeric:tabular-nums}.tip small{color:var(--muted)}
+.status{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);pointer-events:none}
+aside{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:18px 18px 28px;min-height:0}
+.finder{display:block;color:var(--faint);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.finder input{width:100%;margin-top:6px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0e1411;letter-spacing:0;text-transform:none;font-size:15px}
+#hits{list-style:none;margin:8px 0 0;padding:4px;border:1px solid var(--line);border-radius:10px;background:#0e1411}
+#hits button{width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:8px 10px}#hits button:hover{background:#1c2823}#hits small{color:var(--muted);margin-left:8px}
+.kicker{margin:20px 0 0;color:var(--gold);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+h2{margin:6px 0 0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(32px,4vw,42px);letter-spacing:-.03em;line-height:.95}
+.region{margin:6px 0 0;color:var(--muted)}
+.value{margin:16px 0 0;font-family:'Instrument Serif',Georgia,serif;font-size:clamp(48px,6vw,68px);line-height:.85;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.gloss{margin:6px 0 0;color:var(--muted)}.rank{margin:12px 0 0;line-height:1.45}
+.ghost{margin-top:12px;background:transparent;color:var(--gold);border:1px solid #4a4330;border-radius:999px;padding:8px 14px}.ghost:hover{background:#241e12}.ghost:disabled{opacity:.4;cursor:default}
+h3{margin:26px 0 8px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+#measures{list-style:none;margin:0;padding:0}#measures li{padding:8px 0;border-top:1px solid #24302b}
+#measures .row{display:flex;justify-content:space-between;gap:12px;font-size:14px}#measures .row b{font-weight:500}
+.meter{margin-top:6px;height:3px;background:#24302b;border-radius:99px}.meter span{display:block;height:100%;width:0;background:#6f9a68;border-radius:inherit}
+#measures li.on .row b,#measures li.on .row span{color:var(--gold)}#measures li.on .meter span{background:var(--gold)}
+.note{margin:18px 0 0;color:var(--faint);font-size:12px;line-height:1.45}
+@media (max-width:860px){.app{grid-template-columns:1fr;grid-template-rows:auto minmax(180px,1fr) minmax(168px,40dvh)}header{grid-column:auto;padding:12px 14px}h1{font-size:28px}aside{border-left:0;border-top:1px solid var(--line)}.legend{width:min(228px,calc(100% - 64px))}}
+@media (prefers-reduced-motion:reduce){.country,.tip{transition:none}}
+</style>
+</head>
+<body>
+<div class='app'>
+<header>
+<div class='brand'><h1>Meridian</h1><i class='rule'></i><small id='sampleline'>Sample atlas</small></div>
+<div class='switcher' role='tablist' aria-label='Measure'>
+<button type='button' role='tab' data-m='life' aria-pressed='true'>Life expectancy</button>
+<button type='button' role='tab' data-m='gdp' aria-pressed='false'>GDP per person</button>
+<button type='button' role='tab' data-m='net' aria-pressed='false'>Internet access</button>
+<button type='button' role='tab' data-m='renew' aria-pressed='false'>Renewable power</button>
+<button type='button' role='tab' data-m='age' aria-pressed='false'>Median age</button>
+</div>
+</header>
+<div class='stage' id='stage'>
+<svg id='map' role='img' aria-label='World map colored by the selected measure'></svg>
+<div class='legend'><div class='legend-top'><span id='leg-title'>Life expectancy</span><span id='leg-unit'>years</span></div><div class='bar'></div><div class='ticks'><span id='leg-lo'></span><span id='leg-mid'></span><span id='leg-hi'></span></div><div class='nodata'><i></i> No sample</div></div>
+<div class='zoom'><button type='button' id='zin' aria-label='Zoom in'>+</button><button type='button' id='zout' aria-label='Zoom out'>−</button><button type='button' id='zfit' aria-label='Fit the world'>Fit</button></div>
+<div class='tip' id='tip'></div>
+<div class='status' id='status'>Drawing the atlas…</div>
+</div>
+<aside>
+<label class='finder'>Find a country<input id='q' type='search' placeholder='Japan, Kenya, Brazil' autocomplete='off'></label>
+<ul id='hits' hidden></ul>
+<p class='kicker' id='kicker'>Selected</p>
+<h2 id='cname'>Choose a country</h2>
+<p class='region' id='cregion'></p>
+<p class='value' id='cvalue' hidden></p>
+<p class='gloss' id='cgloss'></p>
+<p class='rank' id='crank'></p>
+<button type='button' class='ghost' id='center' disabled>Center on map</button>
+<h3>All measures</h3>
+<ul id='measures'></ul>
+<p class='note'>Rounded 2024 sample, built into the page so the map does not depend on a live feed. For comparison, not a statistical release.</p>
+</aside>
+</div>
+<script src='https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js'></script>
+<script>
+const METRICS={life:{label:'Life expectancy',unit:'years',gloss:'Years at birth',log:false},gdp:{label:'GDP per person',unit:'USD',gloss:'Nominal US dollars',log:true},net:{label:'Internet access',unit:'percent',gloss:'Percent of people online',log:false},renew:{label:'Renewable power',unit:'percent',gloss:'Percent of electricity',log:false},age:{label:'Median age',unit:'years',gloss:'Median age in years',log:false}};
+const ROWS=[
+{id:12,name:'Algeria',region:'Africa',life:77,gdp:5300,net:71,renew:1,age:29},
+{id:24,name:'Angola',region:'Africa',life:64,gdp:2300,net:33,renew:68,age:17},
+{id:204,name:'Benin',region:'Africa',life:60,gdp:1400,net:34,renew:3,age:18},
+{id:72,name:'Botswana',region:'Africa',life:66,gdp:7700,net:77,renew:1,age:24},
+{id:854,name:'Burkina Faso',region:'Africa',life:60,gdp:860,net:22,renew:12,age:17},
+{id:108,name:'Burundi',region:'Africa',life:62,gdp:260,net:11,renew:68,age:16},
+{id:120,name:'Cameroon',region:'Africa',life:63,gdp:1700,net:46,renew:62,age:18},
+{id:132,name:'Cabo Verde',region:'Africa',life:76,gdp:4300,net:70,renew:18,age:27},
+{id:140,name:'Central African Republic',region:'Africa',life:55,gdp:470,net:11,renew:90,age:15},
+{id:148,name:'Chad',region:'Africa',life:53,gdp:700,net:18,renew:1,age:16},
+{id:174,name:'Comoros',region:'Africa',life:64,gdp:1600,net:27,renew:1,age:20},
+{id:178,name:'Congo',region:'Africa',life:64,gdp:2500,net:36,renew:70,age:19},
+{id:180,name:'DR Congo',region:'Africa',life:61,gdp:650,net:23,renew:98,age:16},
+{id:262,name:'Djibouti',region:'Africa',life:66,gdp:3600,net:59,renew:1,age:24},
+{id:818,name:'Egypt',region:'Africa',life:71,gdp:4300,net:72,renew:12,age:24},
+{id:232,name:'Eritrea',region:'Africa',life:67,gdp:600,net:20,renew:1,age:19},
+{id:748,name:'Eswatini',region:'Africa',life:60,gdp:4000,net:58,renew:18,age:21},
+{id:231,name:'Ethiopia',region:'Africa',life:67,gdp:1100,net:19,renew:98,age:19},
+{id:266,name:'Gabon',region:'Africa',life:67,gdp:8500,net:72,renew:40,age:22},
+{id:270,name:'Gambia',region:'Africa',life:63,gdp:850,net:55,renew:1,age:18},
+{id:288,name:'Ghana',region:'Africa',life:65,gdp:2300,net:70,renew:52,age:21},
+{id:324,name:'Guinea',region:'Africa',life:61,gdp:1600,net:27,renew:68,age:18},
+{id:624,name:'Guinea-Bissau',region:'Africa',life:60,gdp:900,net:32,renew:1,age:19},
+{id:384,name:'C\u00f4te d\u2019Ivoire',region:'Africa',life:62,gdp:2600,net:45,renew:30,age:18},
+{id:404,name:'Kenya',region:'Africa',life:67,gdp:2100,net:41,renew:90,age:20},
+{id:426,name:'Lesotho',region:'Africa',life:57,gdp:1100,net:48,renew:100,age:22},
+{id:430,name:'Liberia',region:'Africa',life:62,gdp:750,net:33,renew:1,age:19},
+{id:434,name:'Libya',region:'Africa',life:72,gdp:6700,net:88,renew:1,age:27},
+{id:450,name:'Madagascar',region:'Africa',life:66,gdp:530,net:20,renew:40,age:19},
+{id:454,name:'Malawi',region:'Africa',life:65,gdp:640,net:24,renew:80,age:17},
+{id:466,name:'Mali',region:'Africa',life:60,gdp:900,net:33,renew:30,age:16},
+{id:478,name:'Mauritania',region:'Africa',life:65,gdp:2100,net:59,renew:20,age:20},
+{id:480,name:'Mauritius',region:'Africa',life:75,gdp:11300,net:76,renew:21,age:38},
+{id:504,name:'Morocco',region:'Africa',life:75,gdp:3900,net:90,renew:20,age:30},
+{id:508,name:'Mozambique',region:'Africa',life:61,gdp:600,net:21,renew:82,age:17},
+{id:516,name:'Namibia',region:'Africa',life:64,gdp:4800,net:53,renew:30,age:22},
+{id:562,name:'Niger',region:'Africa',life:62,gdp:600,net:22,renew:1,age:15},
+{id:566,name:'Nigeria',region:'Africa',life:54,gdp:1600,net:55,renew:22,age:18},
+{id:646,name:'Rwanda',region:'Africa',life:68,gdp:1000,net:30,renew:52,age:20},
+{id:686,name:'Senegal',region:'Africa',life:68,gdp:1700,net:60,renew:25,age:19},
+{id:694,name:'Sierra Leone',region:'Africa',life:61,gdp:530,net:30,renew:70,age:19},
+{id:706,name:'Somalia',region:'Africa',life:57,gdp:600,net:28,renew:1,age:16},
+{id:710,name:'South Africa',region:'Africa',life:66,gdp:6200,net:76,renew:13,age:28},
+{id:728,name:'South Sudan',region:'Africa',life:56,gdp:400,net:8,renew:1,age:17},
+{id:729,name:'Sudan',region:'Africa',life:66,gdp:1100,net:29,renew:60,age:19},
+{id:834,name:'Tanzania',region:'Africa',life:67,gdp:1200,net:32,renew:35,age:18},
+{id:768,name:'Togo',region:'Africa',life:63,gdp:1000,net:35,renew:20,age:19},
+{id:788,name:'Tunisia',region:'Africa',life:76,gdp:4200,net:72,renew:3,age:33},
+{id:800,name:'Uganda',region:'Africa',life:64,gdp:1000,net:30,renew:92,age:16},
+{id:894,name:'Zambia',region:'Africa',life:64,gdp:1400,net:31,renew:88,age:17},
+{id:716,name:'Zimbabwe',region:'Africa',life:63,gdp:2000,net:35,renew:55,age:18},
+{id:32,name:'Argentina',region:'Americas',life:77,gdp:13700,net:88,renew:28,age:32},
+{id:44,name:'Bahamas',region:'Americas',life:74,gdp:33000,net:94,renew:1,age:33},
+{id:52,name:'Barbados',region:'Americas',life:78,gdp:21000,net:86,renew:5,age:40},
+{id:84,name:'Belize',region:'Americas',life:73,gdp:7000,net:62,renew:40,age:26},
+{id:68,name:'Bolivia',region:'Americas',life:68,gdp:3700,net:66,renew:30,age:25},
+{id:76,name:'Brazil',region:'Americas',life:76,gdp:10200,net:84,renew:89,age:34},
+{id:124,name:'Canada',region:'Americas',life:82,gdp:54000,net:94,renew:68,age:41},
+{id:152,name:'Chile',region:'Americas',life:81,gdp:17000,net:94,renew:55,age:36},
+{id:170,name:'Colombia',region:'Americas',life:77,gdp:6900,net:73,renew:75,age:32},
+{id:188,name:'Costa Rica',region:'Americas',life:80,gdp:16500,net:83,renew:98,age:35},
+{id:192,name:'Cuba',region:'Americas',life:78,gdp:9500,net:71,renew:4,age:42},
+{id:214,name:'Dominican Republic',region:'Americas',life:73,gdp:10700,net:85,renew:16,age:28},
+{id:218,name:'Ecuador',region:'Americas',life:77,gdp:6600,net:77,renew:78,age:28},
+{id:222,name:'El Salvador',region:'Americas',life:72,gdp:5300,net:63,renew:80,age:28},
+{id:320,name:'Guatemala',region:'Americas',life:72,gdp:5500,net:56,renew:60,age:23},
+{id:328,name:'Guyana',region:'Americas',life:70,gdp:21000,net:85,renew:30,age:26},
+{id:332,name:'Haiti',region:'Americas',life:64,gdp:1700,net:39,renew:10,age:24},
+{id:340,name:'Honduras',region:'Americas',life:71,gdp:3200,net:48,renew:50,age:24},
+{id:388,name:'Jamaica',region:'Americas',life:72,gdp:6700,net:82,renew:12,age:31},
+{id:484,name:'Mexico',region:'Americas',life:75,gdp:14000,net:81,renew:22,age:30},
+{id:558,name:'Nicaragua',region:'Americas',life:75,gdp:2500,net:57,renew:55,age:26},
+{id:591,name:'Panama',region:'Americas',life:79,gdp:18600,net:74,renew:70,age:30},
+{id:600,name:'Paraguay',region:'Americas',life:74,gdp:6200,net:77,renew:100,age:27},
+{id:604,name:'Peru',region:'Americas',life:77,gdp:7900,net:75,renew:58,age:30},
+{id:740,name:'Suriname',region:'Americas',life:72,gdp:5800,net:66,renew:45,age:29},
+{id:780,name:'Trinidad and Tobago',region:'Americas',life:74,gdp:18000,net:80,renew:1,age:37},
+{id:840,name:'United States',region:'Americas',life:78,gdp:83000,net:93,renew:22,age:38},
+{id:858,name:'Uruguay',region:'Americas',life:78,gdp:22000,net:90,renew:90,age:36},
+{id:862,name:'Venezuela',region:'Americas',life:72,gdp:3700,net:62,renew:70,age:29},
+{id:304,name:'Greenland',region:'Americas',life:73,gdp:54000,net:70,renew:70,age:34},
+{id:4,name:'Afghanistan',region:'Asia',life:65,gdp:400,net:18,renew:85,age:17},
+{id:51,name:'Armenia',region:'Asia',life:75,gdp:8300,net:79,renew:30,age:36},
+{id:31,name:'Azerbaijan',region:'Asia',life:74,gdp:7200,net:88,renew:8,age:33},
+{id:48,name:'Bahrain',region:'Asia',life:79,gdp:29000,net:100,renew:1,age:33},
+{id:50,name:'Bangladesh',region:'Asia',life:74,gdp:2700,net:45,renew:2,age:27},
+{id:64,name:'Bhutan',region:'Asia',life:73,gdp:3700,net:86,renew:100,age:30},
+{id:96,name:'Brunei',region:'Asia',life:75,gdp:33000,net:99,renew:1,age:32},
+{id:116,name:'Cambodia',region:'Asia',life:70,gdp:1900,net:60,renew:50,age:27},
+{id:156,name:'China',region:'Asia',life:78,gdp:13000,net:77,renew:31,age:39},
+{id:196,name:'Cyprus',region:'Asia',life:81,gdp:34000,net:91,renew:16,age:38},
+{id:268,name:'Georgia',region:'Asia',life:74,gdp:6700,net:79,renew:75,age:37},
+{id:356,name:'India',region:'Asia',life:72,gdp:2700,net:56,renew:21,age:28},
+{id:360,name:'Indonesia',region:'Asia',life:71,gdp:4900,net:69,renew:20,age:30},
+{id:364,name:'Iran',region:'Asia',life:75,gdp:4500,net:79,renew:6,age:32},
+{id:368,name:'Iraq',region:'Asia',life:72,gdp:5500,net:80,renew:2,age:20},
+{id:376,name:'Israel',region:'Asia',life:83,gdp:55000,net:90,renew:8,age:30},
+{id:392,name:'Japan',region:'Asia',life:84,gdp:34000,net:85,renew:22,age:49},
+{id:400,name:'Jordan',region:'Asia',life:75,gdp:4500,net:88,renew:20,age:24},
+{id:398,name:'Kazakhstan',region:'Asia',life:74,gdp:13000,net:92,renew:12,age:31},
+{id:414,name:'Kuwait',region:'Asia',life:80,gdp:37000,net:100,renew:1,age:37},
+{id:417,name:'Kyrgyzstan',region:'Asia',life:72,gdp:2000,net:78,renew:90,age:26},
+{id:418,name:'Laos',region:'Asia',life:69,gdp:2100,net:62,renew:70,age:24},
+{id:422,name:'Lebanon',region:'Asia',life:75,gdp:4100,net:87,renew:5,age:30},
+{id:458,name:'Malaysia',region:'Asia',life:76,gdp:12000,net:97,renew:19,age:31},
+{id:462,name:'Maldives',region:'Asia',life:81,gdp:12000,net:85,renew:5,age:31},
+{id:496,name:'Mongolia',region:'Asia',life:72,gdp:5800,net:81,renew:8,age:28},
+{id:104,name:'Myanmar',region:'Asia',life:67,gdp:1200,net:44,renew:50,age:30},
+{id:524,name:'Nepal',region:'Asia',life:70,gdp:1400,net:50,renew:98,age:25},
+{id:512,name:'Oman',region:'Asia',life:74,gdp:21000,net:96,renew:1,age:30},
+{id:586,name:'Pakistan',region:'Asia',life:67,gdp:1600,net:45,renew:30,age:20},
+{id:608,name:'Philippines',region:'Asia',life:72,gdp:3900,net:73,renew:22,age:25},
+{id:634,name:'Qatar',region:'Asia',life:81,gdp:80000,net:100,renew:1,age:33},
+{id:410,name:'South Korea',region:'Asia',life:84,gdp:35000,net:97,renew:9,age:45},
+{id:682,name:'Saudi Arabia',region:'Asia',life:78,gdp:32000,net:100,renew:1,age:30},
+{id:702,name:'Singapore',region:'Asia',life:83,gdp:85000,net:96,renew:2,age:42},
+{id:144,name:'Sri Lanka',region:'Asia',life:77,gdp:3400,net:50,renew:50,age:33},
+{id:760,name:'Syria',region:'Asia',life:72,gdp:1000,net:47,renew:5,age:22},
+{id:762,name:'Tajikistan',region:'Asia',life:72,gdp:1200,net:36,renew:95,age:22},
+{id:764,name:'Thailand',region:'Asia',life:79,gdp:7200,net:88,renew:15,age:40},
+{id:626,name:'Timor-Leste',region:'Asia',life:69,gdp:1800,net:40,renew:1,age:20},
+{id:792,name:'Turkey',region:'Asia',life:78,gdp:13000,net:86,renew:42,age:32},
+{id:795,name:'Turkmenistan',region:'Asia',life:70,gdp:8000,net:30,renew:1,age:27},
+{id:784,name:'United Arab Emirates',region:'Asia',life:79,gdp:49000,net:100,renew:5,age:33},
+{id:860,name:'Uzbekistan',region:'Asia',life:72,gdp:2500,net:84,renew:12,age:27},
+{id:704,name:'Vietnam',region:'Asia',life:75,gdp:4300,net:79,renew:42,age:32},
+{id:887,name:'Yemen',region:'Asia',life:66,gdp:600,net:27,renew:10,age:20},
+{id:8,name:'Albania',region:'Europe',life:77,gdp:8300,net:80,renew:100,age:38},
+{id:40,name:'Austria',region:'Europe',life:82,gdp:56000,net:93,renew:78,age:44},
+{id:112,name:'Belarus',region:'Europe',life:74,gdp:7800,net:86,renew:6,age:41},
+{id:56,name:'Belgium',region:'Europe',life:82,gdp:53000,net:94,renew:26,age:42},
+{id:70,name:'Bosnia and Herzegovina',region:'Europe',life:76,gdp:8200,net:80,renew:40,age:43},
+{id:100,name:'Bulgaria',region:'Europe',life:75,gdp:16000,net:80,renew:20,age:45},
+{id:191,name:'Croatia',region:'Europe',life:78,gdp:22000,net:83,renew:65,age:45},
+{id:203,name:'Czechia',region:'Europe',life:79,gdp:31000,net:88,renew:15,age:43},
+{id:208,name:'Denmark',region:'Europe',life:82,gdp:68000,net:98,renew:81,age:42},
+{id:233,name:'Estonia',region:'Europe',life:79,gdp:29000,net:91,renew:35,age:43},
+{id:246,name:'Finland',region:'Europe',life:82,gdp:54000,net:93,renew:50,age:43},
+{id:250,name:'France',region:'Europe',life:83,gdp:46000,net:92,renew:25,age:42},
+{id:276,name:'Germany',region:'Europe',life:81,gdp:53000,net:93,renew:52,age:45},
+{id:300,name:'Greece',region:'Europe',life:81,gdp:23000,net:85,renew:45,age:46},
+{id:348,name:'Hungary',region:'Europe',life:77,gdp:22000,net:89,renew:15,age:44},
+{id:352,name:'Iceland',region:'Europe',life:83,gdp:79000,net:100,renew:100,age:37},
+{id:372,name:'Ireland',region:'Europe',life:83,gdp:103000,net:94,renew:40,age:39},
+{id:380,name:'Italy',region:'Europe',life:83,gdp:39000,net:87,renew:40,age:48},
+{id:428,name:'Latvia',region:'Europe',life:76,gdp:23000,net:91,renew:65,age:44},
+{id:440,name:'Lithuania',region:'Europe',life:77,gdp:28000,net:88,renew:70,age:44},
+{id:442,name:'Luxembourg',region:'Europe',life:83,gdp:128000,net:98,renew:15,age:40},
+{id:470,name:'Malta',region:'Europe',life:83,gdp:38000,net:92,renew:12,age:41},
+{id:498,name:'Moldova',region:'Europe',life:71,gdp:6600,net:80,renew:8,age:37},
+{id:499,name:'Montenegro',region:'Europe',life:77,gdp:12000,net:82,renew:60,age:39},
+{id:528,name:'Netherlands',region:'Europe',life:82,gdp:63000,net:95,renew:40,age:42},
+{id:578,name:'Norway',region:'Europe',life:83,gdp:88000,net:99,renew:98,age:40},
+{id:616,name:'Poland',region:'Europe',life:78,gdp:22000,net:87,renew:25,age:42},
+{id:620,name:'Portugal',region:'Europe',life:82,gdp:28000,net:85,renew:60,age:46},
+{id:642,name:'Romania',region:'Europe',life:76,gdp:18000,net:86,renew:42,age:43},
+{id:643,name:'Russia',region:'Europe',life:73,gdp:14000,net:88,renew:18,age:40},
+{id:688,name:'Serbia',region:'Europe',life:76,gdp:12000,net:84,renew:35,age:43},
+{id:703,name:'Slovakia',region:'Europe',life:78,gdp:24000,net:90,renew:22,age:41},
+{id:705,name:'Slovenia',region:'Europe',life:82,gdp:32000,net:89,renew:35,age:45},
+{id:724,name:'Spain',region:'Europe',life:84,gdp:33000,net:94,renew:50,age:45},
+{id:752,name:'Sweden',region:'Europe',life:83,gdp:56000,net:96,renew:68,age:41},
+{id:756,name:'Switzerland',region:'Europe',life:84,gdp:100000,net:96,renew:70,age:43},
+{id:804,name:'Ukraine',region:'Europe',life:73,gdp:5200,net:82,renew:10,age:41},
+{id:826,name:'United Kingdom',region:'Europe',life:81,gdp:49000,net:96,renew:45,age:40},
+{id:36,name:'Australia',region:'Oceania',life:83,gdp:65000,net:96,renew:32,age:38},
+{id:242,name:'Fiji',region:'Oceania',life:68,gdp:5800,net:80,renew:55,age:28},
+{id:554,name:'New Zealand',region:'Oceania',life:83,gdp:48000,net:95,renew:84,age:38},
+{id:598,name:'Papua New Guinea',region:'Oceania',life:66,gdp:2800,net:32,renew:30,age:22},
+{id:90,name:'Solomon Islands',region:'Oceania',life:70,gdp:2200,net:36,renew:1,age:20},
+{id:10,name:'Antarctica',region:'Antarctica',life:null,gdp:null,net:null,renew:null,age:null}
+];
+const byId=new Map(ROWS.map(r=>[r.id,r]));
+const ramp=d3.interpolateRgbBasis(['#243830','#3f6d56','#8fbf73','#f0d56a','#ff9a3c']);
+const motion=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage=document.getElementById('stage');
+const svg=d3.select('#map');
+const tip=document.getElementById('tip');
+const statusEl=document.getElementById('status');
+const g=svg.append('g');
+const sphere=g.append('path').attr('class','sphere');
+const grat=g.append('path').attr('class','grat');
+const countriesG=g.append('g');
+const highlight=g.append('path').attr('class','highlight');
+let width=0,height=0,projection,path,scale,metric='life',selected=null,features=[];
+const zoom=d3.zoom().scaleExtent([1,10]).on('zoom',event=>{
+  g.attr('transform',event.transform);
+  const k=event.transform.k;
+  countriesG.selectAll('path').attr('stroke-width',0.55/k);
+  highlight.attr('stroke-width',1.7/k);
+  grat.attr('stroke-width',0.7/k);
+});
+svg.call(zoom);
+function values(key){return ROWS.map(r=>r[key]).filter(v=>v!=null)}
+function formatValue(key,v){
+  if(v==null)return 'No sample';
+  if(key==='gdp'){if(v>=10000)return '$'+Math.round(v/1000)+'k';if(v>=1000)return '$'+(v/1000).toFixed(1)+'k';return '$'+Math.round(v)}
+  if(key==='life'){const n=(Math.round(v*10)/10).toFixed(1);return n.endsWith('.0')?n.slice(0,-2):n}
+  return String(Math.round(v))+(key==='net'||key==='renew'?'%':'');
+}
+function gapSentence(key,delta,median){
+  const med=formatValue(key,median);
+  const tiny=key==='gdp'?50:0.05;
+  if(Math.abs(delta)<tiny)return 'At the sample median of '+med+'.';
+  const dir=delta>0?'above':'below';
+  if(key==='gdp')return formatValue(key,Math.abs(delta))+' '+dir+' the sample median of '+med+'.';
+  if(key==='net'||key==='renew')return Math.round(Math.abs(delta))+' points '+dir+' the sample median of '+med+'.';
+  return formatValue(key,Math.abs(delta))+' years '+dir+' the sample median of '+med+'.';
+}
+function buildScale(){
+  const vals=values(metric);
+  const min=d3.min(vals),max=d3.max(vals);
+  scale=METRICS[metric].log?d3.scaleSequentialLog([min,max],ramp):d3.scaleSequential([min,max],ramp);
+  const mid=METRICS[metric].log?Math.exp((Math.log(min)+Math.log(max))/2):(min+max)/2;
+  document.getElementById('leg-title').textContent=METRICS[metric].label;
+  document.getElementById('leg-unit').textContent=METRICS[metric].unit;
+  document.getElementById('leg-lo').textContent=formatValue(metric,min);
+  document.getElementById('leg-mid').textContent=formatValue(metric,mid);
+  document.getElementById('leg-hi').textContent=formatValue(metric,max);
+}
+function colorOf(id){const row=byId.get(id);if(!row||row[metric]==null)return '#1a2420';return scale(row[metric])}
+function paint(){countriesG.selectAll('path').attr('fill',d=>colorOf(+d.id))}
+function featureFor(id){return features.find(d=>+d.id===id)||null}
+function syncHighlight(){
+  const f=featureFor(selected);
+  highlight.attr('d',f?path(f):null);
+  highlight.attr('stroke-width',1.7/d3.zoomTransform(svg.node()).k);
+}
+function ordinal(n){const s=['th','st','nd','rd'];const v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+function renderPanel(){
+  const row=selected!=null?byId.get(selected):null;
+  const value=document.getElementById('cvalue');
+  const list=document.getElementById('measures');
+  const center=document.getElementById('center');
+  list.innerHTML='';
+  if(!row){
+    document.getElementById('kicker').textContent='World view';
+    document.getElementById('cname').textContent='Choose a country';
+    document.getElementById('cregion').textContent='Click the map, or search. Drag to pan. Scroll or pinch to zoom.';
+    value.hidden=true;
+    document.getElementById('cgloss').textContent='';
+    document.getElementById('crank').textContent='';
+    center.disabled=true;
+    return;
+  }
+  document.getElementById('kicker').textContent='Selected';
+  document.getElementById('cname').textContent=row.name;
+  document.getElementById('cregion').textContent=row.region;
+  const v=row[metric];
+  if(v==null){
+    value.hidden=true;
+    document.getElementById('cgloss').textContent='Not in this sample.';
+    document.getElementById('crank').textContent='';
+  }else{
+    value.hidden=false;
+    value.textContent=formatValue(metric,v);
+    document.getElementById('cgloss').textContent=METRICS[metric].gloss;
+    const vals=values(metric);
+    const place=vals.filter(x=>x>v).length+1;
+    document.getElementById('crank').textContent=ordinal(place)+' of '+vals.length+' in the sample. '+gapSentence(metric,v-d3.median(vals),d3.median(vals));
+  }
+  center.disabled=!featureFor(selected);
+  Object.keys(METRICS).forEach(key=>{
+    const li=document.createElement('li');
+    if(key===metric)li.className='on';
+    const raw=row[key];
+    const vals=values(key);
+    const min=d3.min(vals),max=d3.max(vals);
+    const pct=raw==null||max===min?0:Math.round((raw-min)/(max-min)*100);
+    const rowEl=document.createElement('div');
+    rowEl.className='row';
+    const b=document.createElement('b');
+    b.textContent=METRICS[key].label;
+    const span=document.createElement('span');
+    span.textContent=formatValue(key,raw);
+    rowEl.append(b,span);
+    const meter=document.createElement('div');
+    meter.className='meter';
+    const fill=document.createElement('span');
+    fill.style.width=pct+'%';
+    meter.append(fill);
+    li.append(rowEl,meter);
+    list.append(li);
+  });
+}
+function selectId(id,opts){
+  selected=id;
+  syncHighlight();
+  renderPanel();
+  if(opts&&opts.center){const f=featureFor(id);if(f)centerOn(f)}
+}
+function clearSelection(){selected=null;syncHighlight();renderPanel()}
+function centerOn(feature){
+  const b=path.bounds(feature);
+  const dx=b[1][0]-b[0][0],dy=b[1][1]-b[0][1];
+  const x=(b[0][0]+b[1][0])/2,y=(b[0][1]+b[1][1])/2;
+  const k=Math.max(1.15,Math.min(8,0.62/Math.max(dx/width,dy/height)));
+  const t=d3.zoomIdentity.translate(width/2,height/2).scale(k).translate(-x,-y);
+  svg.transition().duration(motion?700:0).ease(d3.easeCubicOut).call(zoom.transform,t);
+}
+function fit(){
+  width=stage.clientWidth;height=stage.clientHeight;
+  if(width<20||height<20)return;
+  svg.attr('viewBox','0 0 '+width+' '+height);
+  projection=d3.geoEqualEarth().fitExtent([[18,16],[width-18,height-16]],{type:'Sphere'});
+  path=d3.geoPath(projection);
+  sphere.attr('d',path({type:'Sphere'}));
+  grat.attr('d',path(d3.geoGraticule().step([30,30])()));
+  countriesG.selectAll('path').attr('d',path);
+  svg.call(zoom.transform,d3.zoomIdentity);
+  syncHighlight();
+}
+function showTip(event,id){
+  const row=byId.get(id);
+  tip.replaceChildren();
+  const b=document.createElement('b');
+  b.textContent=row?row.name:'Unlisted territory';
+  const em=document.createElement('em');
+  em.textContent=row?formatValue(metric,row[metric]):'No sample';
+  const small=document.createElement('small');
+  small.textContent=METRICS[metric].label;
+  tip.append(b,em,document.createElement('br'),small);
+  tip.classList.add('show');
+  const box=stage.getBoundingClientRect();
+  let x=event.clientX-box.left+14,y=event.clientY-box.top+14;
+  const tw=tip.offsetWidth,th=tip.offsetHeight;
+  if(x+tw>box.width-8)x=event.clientX-box.left-tw-14;
+  if(y+th>box.height-8)y=event.clientY-box.top-th-14;
+  tip.style.left=Math.max(8,x)+'px';
+  tip.style.top=Math.max(8,y)+'px';
+}
+function setMetric(next){
+  metric=next;
+  document.querySelectorAll('.switcher button').forEach(btn=>btn.setAttribute('aria-pressed',btn.dataset.m===next?'true':'false'));
+  buildScale();paint();renderPanel();
+}
+document.querySelectorAll('.switcher button').forEach(btn=>btn.addEventListener('click',()=>setMetric(btn.dataset.m)));
+document.getElementById('zin').addEventListener('click',()=>svg.transition().duration(motion?220:0).call(zoom.scaleBy,1.45));
+document.getElementById('zout').addEventListener('click',()=>svg.transition().duration(motion?220:0).call(zoom.scaleBy,1/1.45));
+document.getElementById('zfit').addEventListener('click',()=>svg.transition().duration(motion?600:0).ease(d3.easeCubicOut).call(zoom.transform,d3.zoomIdentity));
+document.getElementById('center').addEventListener('click',()=>{const f=featureFor(selected);if(f)centerOn(f)});
+const q=document.getElementById('q');
+const hits=document.getElementById('hits');
+q.addEventListener('input',()=>{
+  const query=q.value.trim().toLowerCase();
+  hits.replaceChildren();
+  if(!query){hits.hidden=true;return}
+  ROWS.filter(r=>r.name.toLowerCase().includes(query)&&r.id!==10).slice(0,6).forEach(r=>{
+    const li=document.createElement('li');
+    const button=document.createElement('button');
+    button.type='button';
+    button.textContent=r.name;
+    const small=document.createElement('small');
+    small.textContent=r.region;
+    button.append(small);
+    button.addEventListener('click',()=>{selectId(r.id,{center:true});hits.hidden=true;q.value=''});
+    li.append(button);hits.append(li);
+  });
+  hits.hidden=!hits.children.length;
+});
+window.addEventListener('keydown',event=>{if(event.key==='Escape')clearSelection()});
+sphere.on('click',clearSelection);
+sphere.on('pointermove',()=>tip.classList.remove('show'));
+let lastW=0;
+new ResizeObserver(()=>{const w=stage.clientWidth;if(Math.abs(w-lastW)<2)return;lastW=w;if(features.length)fit()}).observe(stage);
+async function main(){
+  document.getElementById('sampleline').textContent=ROWS.filter(r=>r.life!=null).length+' countries · sample 2024';
+  try{
+    const world=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>{if(!r.ok)throw new Error(String(r.status));return r.json()});
+    features=topojson.feature(world,world.objects.countries).features;
+    countriesG.selectAll('path').data(features).join('path').attr('class','country').attr('tabindex',0)
+      .on('pointerenter',(event,d)=>showTip(event,+d.id))
+      .on('pointermove',(event,d)=>showTip(event,+d.id))
+      .on('pointerleave',()=>tip.classList.remove('show'))
+      .on('click',(event,d)=>{event.stopPropagation();selectId(+d.id)})
+      .on('keydown',(event,d)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectId(+d.id,{center:true})}});
+    buildScale();fit();paint();statusEl.remove();selectId(710);
+  }catch(err){
+    statusEl.textContent='The atlas could not be loaded. Check the connection and reload.';
+  }
+}
+main();
+</script>
+</body>
+</html>
